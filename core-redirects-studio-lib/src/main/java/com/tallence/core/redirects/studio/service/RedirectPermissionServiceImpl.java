@@ -33,9 +33,19 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.context.SecurityContextHolder;
+import com.coremedia.cap.springframework.security.SpringSecurityCapUserFinder;
+import com.coremedia.cap.springframework.security.impl.CapSpringSecurityCapUserFinder;
 
 import javax.annotation.PostConstruct;
 
+import com.coremedia.cap.common.CapConnection;
+
+
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
 import static com.tallence.core.redirects.studio.model.RedirectUpdateProperties.SOURCE_URL_TYPE;
 
 /**
@@ -46,7 +56,41 @@ import static com.tallence.core.redirects.studio.model.RedirectUpdateProperties.
  */
 public class RedirectPermissionServiceImpl implements RedirectPermissionService {
 
+  /**
+   * Creates the {@link SpringSecurityCapUserFinder} bean that is used
+   * to find a {@link User} for a given {@link org.springframework.security.core.Authentication} object.
+   * <p>
+   * It can be replaced with a custom {@link SpringSecurityCapUserFinder} bean, see {@link ConditionalOnMissingBean}.
+   *
+   * @param capConnection the {@link CapConnection} (bean)
+   * @return the {@link SpringSecurityCapUserFinder} (bean)
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public SpringSecurityCapUserFinder redirectSpringSecurityCapUserFinder(CapConnection capConnection) {
+    CapSpringSecurityCapUserFinder capSpringSecurityCapUserFinder = new CapSpringSecurityCapUserFinder();
+    capSpringSecurityCapUserFinder.setCapConnection(capConnection);
+    capSpringSecurityCapUserFinder.setIdentifyByName(true);
+    return capSpringSecurityCapUserFinder;
+  }
+
+  /**
+   * Creates the {@link AuthenticationManager} bean, using the default bean name is that is defined
+   * by {@link BeanIds#AUTHENTICATION_MANAGER}.
+   * <p>
+   * It can be replaced with a custom {@link AuthenticationManager} bean, see {@link ConditionalOnMissingBean}.
+   *
+   * @param capAuthenticationProvider the {@link #capAuthenticationProvider} (bean)
+   * @return the {@link AuthenticationManager} (bean)
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public AuthenticationManager redirectAuthenticationManager(AuthenticationProvider capAuthenticationProvider) {
+    return new ProviderManager(capAuthenticationProvider);
+  }
+
   private static final Logger LOG = LoggerFactory.getLogger(RedirectPermissionServiceImpl.class);
+
 
   private final ContentRepository contentRepository;
   private final UserRepository userRepository;
@@ -55,6 +99,14 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
   private Group regexGroup;
   private Group targetUrlGroup;
   private ContentType redirectContentType;
+
+ /** public SpringSecurityCapUserFinder getSpringSecurityCapUserFinder() {
+    return springSecurityCapUserFinder;
+  }
+
+  public void setSpringSecurityCapUserFinder(SpringSecurityCapUserFinder springSecurityCapUserFinder) {
+    this.springSecurityCapUserFinder = springSecurityCapUserFinder;
+  }**/
 
   @Autowired
   public RedirectPermissionServiceImpl(ContentRepository contentRepository, UserRepository userRepository,
@@ -74,7 +126,9 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public boolean mayCreate(Content rootFolder, RedirectUpdateProperties updateProperties) {
+    LOG.info("######### RedirectPermissionServiceImpl mayCreate #########");
     Boolean toBePublished = updateProperties.getActive();
+    LOG.info("######### RedirectPermissionServiceImpl toBePublished #########" + toBePublished);
 
     if (toBePublished == null) {
       //It should not be null
@@ -101,14 +155,19 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public boolean mayWrite(Content redirect, RedirectUpdateProperties updateProperties) {
+    LOG.info("######### RedirectPermissionServiceImpl mayCreate #########");
     //Only admins may edit regex redirects
     boolean administrator = isUserAllowedForRegex();
+    LOG.info("######### RedirectPermissionServiceImpl mayWrite administrator #########" + administrator);
 
     //publication rights are required if the document is already published or if it is meant to be,
     // according to the given properties.
     boolean alreadyPublished = contentRepository.getPublicationService().isPublished(redirect);
+    LOG.info("######### RedirectPermissionServiceImpl mayWrite alreadyPublished #########" + alreadyPublished);
     Boolean publishDocument = updateProperties.getActive();
+    LOG.info("######### RedirectPermissionServiceImpl mayWrite publishDocument #########" + publishDocument);
     boolean requirePublicationRights = Boolean.TRUE.equals(publishDocument) || alreadyPublished;
+    LOG.info("######### RedirectPermissionServiceImpl mayWrite requirePublicationRights #########" + requirePublicationRights);
 
     return mayPerformWrite(redirect) &&
             (!requirePublicationRights || mayPerformPublish(redirect)) &&
@@ -119,6 +178,7 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public RedirectRights resolveRights(Content rootFolder) {
+    LOG.info("######### RedirectPermissionServiceImpl resolveRights rootFolder #########" + rootFolder.getId());
     return new RedirectRights(mayPerformWrite(rootFolder), mayPerformPublish(rootFolder), isUserAllowedForRegex(), isUserAllowedForTargetUrlUsage());
   }
 
@@ -132,16 +192,20 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   private boolean mayPerformWrite(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
+    LOG.info("######### RedirectPermissionServiceImpl mayPerformWrite accessControl #########" + accessControl);
+
     return accessControl.mayPerform(content, redirectContentType, Right.WRITE);
   }
 
   private boolean mayPerformPublish(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
+    LOG.info("######### RedirectPermissionServiceImpl mayPerformPublish accessControl #########" + accessControl);
     return accessControl.mayPerform(content, redirectContentType, Right.PUBLISH);
   }
 
   private boolean mayPerformDelete(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
+    LOG.info("######### RedirectPermissionServiceImpl mayPerformDelete accessControl #########" + accessControl);
     return accessControl.mayPerform(content, redirectContentType, Right.DELETE);
   }
 
@@ -172,8 +236,26 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
   }
 
   private String getUserId() {
+    try {
+      LOG.info("######### RedirectPermissionServiceImpl alternative strategy ########");
+      SpringSecurityCapUserFinder finder = redirectSpringSecurityCapUserFinder(contentRepository.getConnection());
+      LOG.info("######### RedirectPermissionServiceImpl finder #########" + finder);
+      User temp = finder.findCapUser(SecurityContextHolder.getContext().getAuthentication());
+      LOG.info("######### RedirectPermissionServiceImpl finder user #########"+ temp);
+      LOG.info("######### RedirectPermissionServiceImpl finder tempId #########"+ temp.getId());
+      Content home = temp.getHomeFolder();
+      LOG.info("######### RedirectPermissionServiceImpl finder home #########"+ home.getId());
+    } catch (Exception e) {
+      LOG.error("######### RedirectPermissionServiceImpl exception #########"+ e.getMessage());
+    }
+
+
+    LOG.info("######### RedirectPermissionServiceImpl getUserId #########");
+    LOG.info("######### RedirectPermissionServiceImpl getUserId SecurityContextHolder.getContext().getAuthentication() #########"+ SecurityContextHolder.getContext().getAuthentication());
     Object user = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    LOG.info("######### RedirectPermissionServiceImpl getUserId user #########"+ user);
     if (user instanceof CapUserDetails) {
+      LOG.info("######### RedirectPermissionServiceImpl getUserId userId #########"+ ((CapUserDetails) user).getUserId());
       return ((CapUserDetails) user).getUserId();
     } else {
       throw new IllegalStateException("Could not get userId from authenticated user.");
