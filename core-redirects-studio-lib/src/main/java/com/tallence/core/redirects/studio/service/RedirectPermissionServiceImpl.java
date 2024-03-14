@@ -94,6 +94,7 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   private final ContentRepository contentRepository;
   private final UserRepository userRepository;
+  private final CapConnection capConnection;
   private final String regexGroupName;
   private final String targetUrlGroupName;
   private Group regexGroup;
@@ -110,10 +111,16 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Autowired
   public RedirectPermissionServiceImpl(ContentRepository contentRepository, UserRepository userRepository,
+                                       CapConnection capConnection,
                                        @Value("${core.redirects.permissions.targetUrlGroup:}") String targetUrlGroupName,
                                        @Value("${core.redirects.permissions.regexGroup:}") String regexGroupName) {
+    LOG.debug("######### RedirectPermissionServiceImpl contructor DEBUG #########");
+    LOG.info("######### RedirectPermissionServiceImpl contructor INFO #########");
+    LOG.warn("######### RedirectPermissionServiceImpl contructor WARN #########");
+    LOG.error("######### RedirectPermissionServiceImpl contructor ERROR #########");
     this.contentRepository = contentRepository;
     this.userRepository = userRepository;
+    this.capConnection = capConnection;
     this.redirectContentType = contentRepository.getContentType("Redirect");
     this.regexGroupName = regexGroupName;
     this.targetUrlGroupName = targetUrlGroupName;
@@ -126,9 +133,9 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public boolean mayCreate(Content rootFolder, RedirectUpdateProperties updateProperties) {
-    LOG.info("######### RedirectPermissionServiceImpl mayCreate #########");
+    LOG.warn("######### RedirectPermissionServiceImpl mayCreate #########");
     Boolean toBePublished = updateProperties.getActive();
-    LOG.info("######### RedirectPermissionServiceImpl toBePublished #########" + toBePublished);
+    LOG.warn("######### RedirectPermissionServiceImpl toBePublished #########" + toBePublished);
 
     if (toBePublished == null) {
       //It should not be null
@@ -155,19 +162,19 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public boolean mayWrite(Content redirect, RedirectUpdateProperties updateProperties) {
-    LOG.info("######### RedirectPermissionServiceImpl mayCreate #########");
+    LOG.warn("######### RedirectPermissionServiceImpl mayCreate #########");
     //Only admins may edit regex redirects
     boolean administrator = isUserAllowedForRegex();
-    LOG.info("######### RedirectPermissionServiceImpl mayWrite administrator #########" + administrator);
+    LOG.warn("######### RedirectPermissionServiceImpl mayWrite administrator #########" + administrator);
 
     //publication rights are required if the document is already published or if it is meant to be,
     // according to the given properties.
     boolean alreadyPublished = contentRepository.getPublicationService().isPublished(redirect);
-    LOG.info("######### RedirectPermissionServiceImpl mayWrite alreadyPublished #########" + alreadyPublished);
+    LOG.warn("######### RedirectPermissionServiceImpl mayWrite alreadyPublished #########" + alreadyPublished);
     Boolean publishDocument = updateProperties.getActive();
-    LOG.info("######### RedirectPermissionServiceImpl mayWrite publishDocument #########" + publishDocument);
+    LOG.warn("######### RedirectPermissionServiceImpl mayWrite publishDocument #########" + publishDocument);
     boolean requirePublicationRights = Boolean.TRUE.equals(publishDocument) || alreadyPublished;
-    LOG.info("######### RedirectPermissionServiceImpl mayWrite requirePublicationRights #########" + requirePublicationRights);
+    LOG.warn("######### RedirectPermissionServiceImpl mayWrite requirePublicationRights #########" + requirePublicationRights);
 
     return mayPerformWrite(redirect) &&
             (!requirePublicationRights || mayPerformPublish(redirect)) &&
@@ -178,7 +185,7 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   @Override
   public RedirectRights resolveRights(Content rootFolder) {
-    LOG.info("######### RedirectPermissionServiceImpl resolveRights rootFolder #########" + rootFolder.getId());
+    LOG.warn("######### RedirectPermissionServiceImpl resolveRights rootFolder #########" + rootFolder.getId());
     return new RedirectRights(mayPerformWrite(rootFolder), mayPerformPublish(rootFolder), isUserAllowedForRegex(), isUserAllowedForTargetUrlUsage());
   }
 
@@ -192,25 +199,27 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
 
   private boolean mayPerformWrite(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
-    LOG.info("######### RedirectPermissionServiceImpl mayPerformWrite accessControl #########" + accessControl);
+    LOG.warn("######### RedirectPermissionServiceImpl mayPerformWrite accessControl #########" + accessControl);
 
     return accessControl.mayPerform(content, redirectContentType, Right.WRITE);
   }
 
   private boolean mayPerformPublish(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
-    LOG.info("######### RedirectPermissionServiceImpl mayPerformPublish accessControl #########" + accessControl);
+    LOG.warn("######### RedirectPermissionServiceImpl mayPerformPublish accessControl #########" + accessControl);
     return accessControl.mayPerform(content, redirectContentType, Right.PUBLISH);
   }
 
   private boolean mayPerformDelete(Content content) {
     AccessControl accessControl = contentRepository.getAccessControl();
-    LOG.info("######### RedirectPermissionServiceImpl mayPerformDelete accessControl #########" + accessControl);
+    LOG.warn("######### RedirectPermissionServiceImpl mayPerformDelete accessControl #########" + accessControl);
     return accessControl.mayPerform(content, redirectContentType, Right.DELETE);
   }
 
   private boolean isUserAllowedForRegex() {
-    User user = userRepository.getUser(getUserId());
+    LOG.warn("######### RedirectPermissionServiceImpl isUserAllowedForRegex #########");
+    User user = getUser();
+    LOG.warn("######### RedirectPermissionServiceImpl isUserAllowedForRegex user #########"+ user);
     if (user == null) {
       throw new IllegalStateException("No user could be found");
     }
@@ -223,7 +232,9 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
   }
 
   private boolean isUserAllowedForTargetUrlUsage() {
-    User user = userRepository.getUser(getUserId());
+    LOG.warn("######### RedirectPermissionServiceImpl isUserAllowedForTargetUrlUsage #########");
+    User user = getUser();
+    LOG.warn("######### RedirectPermissionServiceImpl isUserAllowedForTargetUrlUsage user #########"+ user);
     if (user == null) {
       throw new IllegalStateException("No user could be found");
     }
@@ -235,27 +246,46 @@ public class RedirectPermissionServiceImpl implements RedirectPermissionService 
     }
   }
 
+  private User getUser() {
+    LOG.warn("######### RedirectPermissionServiceImpl getUser ########");
+
+    try {
+      LOG.warn("######### RedirectPermissionServiceImpl alternative strategy ########");
+      SpringSecurityCapUserFinder finder = redirectSpringSecurityCapUserFinder(contentRepository.getConnection());
+      LOG.warn("######### RedirectPermissionServiceImpl finder #########" + finder);
+      User temp = finder.findCapUser(SecurityContextHolder.getContext().getAuthentication());
+      LOG.warn("######### RedirectPermissionServiceImpl finder user #########"+ temp);
+      LOG.warn("######### RedirectPermissionServiceImpl finder tempId #########"+ temp.getId());
+      Content home = temp.getHomeFolder();
+      LOG.warn("######### RedirectPermissionServiceImpl finder home #########"+ home.getId());
+    } catch (Exception e) {
+      LOG.error("######### RedirectPermissionServiceImpl exception #########"+ e.getMessage());
+    }
+    LOG.warn("######### RedirectPermissionServiceImpl getUser user ########"+ capConnection.getSession().getUser());
+    return capConnection.getSession().getUser();
+  }
+
   private String getUserId() {
     try {
-      LOG.info("######### RedirectPermissionServiceImpl alternative strategy ########");
+      LOG.warn("######### RedirectPermissionServiceImpl alternative strategy ########");
       SpringSecurityCapUserFinder finder = redirectSpringSecurityCapUserFinder(contentRepository.getConnection());
-      LOG.info("######### RedirectPermissionServiceImpl finder #########" + finder);
+      LOG.warn("######### RedirectPermissionServiceImpl finder #########" + finder);
       User temp = finder.findCapUser(SecurityContextHolder.getContext().getAuthentication());
-      LOG.info("######### RedirectPermissionServiceImpl finder user #########"+ temp);
-      LOG.info("######### RedirectPermissionServiceImpl finder tempId #########"+ temp.getId());
+      LOG.warn("######### RedirectPermissionServiceImpl finder user #########"+ temp);
+      LOG.warn("######### RedirectPermissionServiceImpl finder tempId #########"+ temp.getId());
       Content home = temp.getHomeFolder();
-      LOG.info("######### RedirectPermissionServiceImpl finder home #########"+ home.getId());
+      LOG.warn("######### RedirectPermissionServiceImpl finder home #########"+ home.getId());
     } catch (Exception e) {
       LOG.error("######### RedirectPermissionServiceImpl exception #########"+ e.getMessage());
     }
 
 
-    LOG.info("######### RedirectPermissionServiceImpl getUserId #########");
-    LOG.info("######### RedirectPermissionServiceImpl getUserId SecurityContextHolder.getContext().getAuthentication() #########"+ SecurityContextHolder.getContext().getAuthentication());
+    LOG.warn("######### RedirectPermissionServiceImpl getUserId #########");
+    LOG.warn("######### RedirectPermissionServiceImpl getUserId SecurityContextHolder.getContext().getAuthentication() #########"+ SecurityContextHolder.getContext().getAuthentication());
     Object user = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    LOG.info("######### RedirectPermissionServiceImpl getUserId user #########"+ user);
+    LOG.warn("######### RedirectPermissionServiceImpl getUserId user #########"+ user);
     if (user instanceof CapUserDetails) {
-      LOG.info("######### RedirectPermissionServiceImpl getUserId userId #########"+ ((CapUserDetails) user).getUserId());
+      LOG.warn("######### RedirectPermissionServiceImpl getUserId userId #########"+ ((CapUserDetails) user).getUserId());
       return ((CapUserDetails) user).getUserId();
     } else {
       throw new IllegalStateException("Could not get userId from authenticated user.");
