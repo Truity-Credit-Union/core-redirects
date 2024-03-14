@@ -33,14 +33,6 @@
       <groupId>com.coremedia.ui</groupId>
       <artifactId>coremedia-rest-core</artifactId>
     </dependency>
-    <dependency>
-      <groupId>com.coremedia.cms</groupId>
-      <artifactId>cap-spring-security</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.springframework.security</groupId>
-      <artifactId>spring-security-core</artifactId>
-    </dependency>
 
     <dependency>
       <groupId>com.coremedia.ui</groupId>
@@ -125,13 +117,6 @@
       <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
-
-
-    <dependency>
-      <groupId>org.springframework.boot</groupId>
-      <artifactId>spring-boot-autoconfigure</artifactId>
-    </dependency>
-
 
     <!-- begin java-11-dependencies -->
     <dependency>
