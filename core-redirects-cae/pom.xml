@@ -140,10 +140,12 @@
     <dependency>
       <groupId>com.coremedia.cms</groupId>
       <artifactId>coremedia-id</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.coremedia.cms</groupId>
       <artifactId>coremedia-cache</artifactId>
+      <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>com.coremedia.cms</groupId>
