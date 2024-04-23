@@ -18,8 +18,8 @@ package com.tallence.core.redirects.cae.filter;
 
 import com.tallence.core.redirects.cae.model.Redirect;
 
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpServletResponseWrapper;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.CharArrayWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -96,7 +96,7 @@ class RedirectHttpServletResponseWrapper extends HttpServletResponseWrapper {
   @Override
   public void flushBuffer() {
     //Do nothing. This will be called for HEAD requests from the
-    //javax.servlet.http.HttpServlet.NoBodyResponse
+    //jakarta.jakarta.javax.servlet.http.HttpServlet.NoBodyResponse
     //But it commits the response, which we do not want in the wrapper
   }
 
