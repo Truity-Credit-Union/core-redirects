@@ -73,7 +73,7 @@ public class SiteRedirects {
   /**
    * Adds the given redirect to the cache, if it is valid.
    *
-   * The url will be decoded because {@link jakarta.javax.servlet.http.HttpServletRequest#getPathInfo} will
+   * The url will be decoded because {@link javax.servlet.http.HttpServletRequest#getPathInfo} will
    * return a decoded pathInfo too. The decoding must not handle params, schemes, ports etc. because the lookup
    * in the {@link RedirectFilter} matches the source with the Request-PathInfo only
    */

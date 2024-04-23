@@ -30,9 +30,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import software.amazon.awssdk.utils.StringUtils;
 
-import jakarta.javax.servlet.*;
-import jakarta.javax.servlet.http.HttpServletRequest;
-import jakarta.javax.servlet.http.HttpServletResponse;
+import javax.servlet.*;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
