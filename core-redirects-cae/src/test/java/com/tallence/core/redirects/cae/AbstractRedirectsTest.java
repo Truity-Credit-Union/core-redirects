@@ -49,13 +49,17 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SING
 @ActiveProfiles(PROFILE)
 public abstract class AbstractRedirectsTest {
 
+  @Autowired
+  protected CMLinkableLinkHandler linkableLinkHandler;
+
 
   @Configuration(proxyBeanMethods = false)
   @PropertySource("classpath:/test.properties")
   @ImportResource(
           value = {
                   "classpath*:/META-INF/coremedia/component-core-redirects-cae.xml",
-                  "classpath*:/com/coremedia/blueprint/base/multisite/bpbase-multisite-cae-services.xml"
+                  "classpath*:/com/coremedia/blueprint/base/multisite/bpbase-multisite-cae-services.xml",
+                  "classpath*:/framework/spring/blueprint-services.xml"
           },
           reader = ResourceAwareXmlBeanDefinitionReader.class
   )
@@ -80,6 +84,11 @@ public abstract class AbstractRedirectsTest {
     @Scope(SCOPE_SINGLETON)
     public XmlUapiConfig xmlUapiConfig() {
       return new XmlUapiConfig(CONTENT_REPOSITORY);
+    }
+
+    @Bean
+    CMLinkableLinkHandler linkableLinkHandler(){
+      return new CMLinkableLinkHandler();
     }
 
   }
