@@ -17,19 +17,19 @@
     "@coremedia/studio-client.main.bpbase-studio-components": "2404.2.0",
     "@coremedia/studio-client.main.editor-components": "2404.2.0",
     "@coremedia/studio-client.multi-site-models": "2404.2.0",
-    "@jangaroo/ext-ts": "^2.0.0",
-    "@jangaroo/runtime": "^3.0.0",
+    "@jangaroo/ext-ts": "2.0.0",
+    "@jangaroo/runtime": "3.0.0",
     "@jangaroo/jooflash-core": "3.0.1"
   },
   "devDependencies": {
-    "@jangaroo/build": "^3.0.0",
-    "@jangaroo/core": "^3.0.0",
-    "@jangaroo/publish": "^3.0.0",
-    "@jangaroo/run": "^3.0.0",
-    "rimraf": "^5.0.5",
-    "@jangaroo/eslint-config": "^2.0.0",
-    "@jangaroo/joounit": "^3.0.0",
-    "eslint": "^8.56.0"
+    "@jangaroo/build": "3.0.0",
+    "@jangaroo/core": "3.0.0",
+    "@jangaroo/publish": "3.0.0",
+    "@jangaroo/run": "3.0.0",
+    "rimraf": "5.0.5",
+    "@jangaroo/eslint-config": "2.0.0",
+    "@jangaroo/joounit": "3.0.0",
+    "eslint": "8.56.0"
   },
   "scripts": {
     "clean": "rimraf ./dist && rimraf ./build",
