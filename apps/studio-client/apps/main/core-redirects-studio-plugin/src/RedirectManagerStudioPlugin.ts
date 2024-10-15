@@ -50,7 +50,7 @@ class RedirectManagerStudioPlugin extends RedirectManagerStudioPluginBase {
   override init(editorContext: IEditorContext): void {
     super.init(editorContext);
 
-    cast(StudioAppsImpl, studioApps._).getSubAppLauncherRegistry().registerSubAppLauncher("redirect-manager", (): void => {
+    cast(StudioAppsImpl, studioApps._).getSubAppLauncherRegistry().registerShortcutRunner("redirect-manager", (): void => {
       const openTagsAction = new OpenRedirectManagerEditorAction();
       openTagsAction.execute();
     });
