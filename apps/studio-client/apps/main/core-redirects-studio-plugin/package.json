@@ -18,11 +18,8 @@
     "@coremedia/studio-client.main.editor-components": "2404.4.0",
     "@coremedia/studio-client.multi-site-models": "2404.4.0",
     "@jangaroo/ext-ts": "^2.0.0",
-    "@jangaroo/runtime": "^3.0.0",
+    "@jangaroo/runtime": "^3.0.2",
     "@jangaroo/jooflash-core": "^3.0.0"
-  },
-  "resolutions": {
-    "jangaroo/runtime": "3.0.2"
   },
   "devDependencies": {
     "@jangaroo/build": "^3.0.0",
