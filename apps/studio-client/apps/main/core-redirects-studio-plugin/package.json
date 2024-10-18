@@ -21,6 +21,10 @@
     "@jangaroo/runtime": "^3.0.2",
     "@jangaroo/jooflash-core": "^3.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "jangaroo/runtime": "3.0.2"
+  },
   "devDependencies": {
     "@jangaroo/build": "^3.0.0",
     "@jangaroo/core": "^3.0.0",
