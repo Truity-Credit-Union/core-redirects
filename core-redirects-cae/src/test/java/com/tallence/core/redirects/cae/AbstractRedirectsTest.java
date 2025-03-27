@@ -15,16 +15,12 @@
  */
 package com.tallence.core.redirects.cae;
 
-import com.coremedia.blueprint.base.multisite.BlueprintMultisiteConfiguration;
+import com.coremedia.blueprint.cae.config.BlueprintHandlersCaeBaseLibConfiguration;
 import com.coremedia.blueprint.testing.ContentTestConfiguration;
 import com.coremedia.blueprint.testing.ContentTestHelper;
-import com.coremedia.cache.config.CacheConfiguration;
 import com.coremedia.cap.test.xmlrepo.XmlRepoConfiguration;
 import com.coremedia.cap.test.xmlrepo.XmlUapiConfig;
 import com.coremedia.cms.delivery.configuration.DeliveryConfigurationProperties;
-import com.coremedia.id.IdServicesConfiguration;
-import com.coremedia.objectserver.config.ContentBeanServicesConfiguration;
-import com.coremedia.objectserver.config.DataviewServicesConfiguration;
 import com.coremedia.objectserver.configuration.CaeConfigurationProperties;
 import com.coremedia.objectserver.web.links.CaeLinkServicesConfiguration;
 import com.coremedia.springframework.xml.ResourceAwareXmlBeanDefinitionReader;
@@ -49,17 +45,16 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_SING
 @ActiveProfiles(PROFILE)
 public abstract class AbstractRedirectsTest {
 
-  @Autowired
-  protected CMLinkableLinkHandler linkableLinkHandler;
-
-
   @Configuration(proxyBeanMethods = false)
   @PropertySource("classpath:/test.properties")
   @ImportResource(
           value = {
+                  "classpath:/com/coremedia/cache/cache-services.xml",
+                  "classpath:/com/coremedia/cae/contentbean-services.xml",
+                  "classpath:/com/coremedia/cae/dataview-services.xml",
+                  "classpath:/com/coremedia/id/id-services.xml",
                   "classpath*:/META-INF/coremedia/component-core-redirects-cae.xml",
-                  "classpath*:/com/coremedia/blueprint/base/multisite/bpbase-multisite-cae-services.xml",
-                  "classpath*:/framework/spring/blueprint-services.xml"
+                  "classpath*:/com/coremedia/blueprint/base/multisite/bpbase-multisite-cae-services.xml"
           },
           reader = ResourceAwareXmlBeanDefinitionReader.class
   )
@@ -69,12 +64,8 @@ public abstract class AbstractRedirectsTest {
   })
   @Import({XmlRepoConfiguration.class,
           ContentTestConfiguration.class,
-          BlueprintMultisiteConfiguration.class,
           CaeLinkServicesConfiguration.class,
-          IdServicesConfiguration.class,
-          DataviewServicesConfiguration.class,
-          ContentBeanServicesConfiguration.class,
-          CacheConfiguration.class})
+          BlueprintHandlersCaeBaseLibConfiguration.class})
   @Profile(PROFILE)
   public static class LocalConfig {
     public static final String PROFILE = "RedirectContentBeanTestBase";
@@ -84,11 +75,6 @@ public abstract class AbstractRedirectsTest {
     @Scope(SCOPE_SINGLETON)
     public XmlUapiConfig xmlUapiConfig() {
       return new XmlUapiConfig(CONTENT_REPOSITORY);
-    }
-
-    @Bean
-    CMLinkableLinkHandler linkableLinkHandler(){
-      return new CMLinkableLinkHandler();
     }
 
   }
